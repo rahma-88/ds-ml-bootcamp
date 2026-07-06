@@ -2,8 +2,7 @@
 
 **Author:** Ali Omar Abdi
 **Course:** DS-ML Bootcamp
-**Topic:** Loan Approval Classification
-
+**Due:** Sunday, July 5, 2026 — 12:00 PM (Africa/Mogadishu / EAT)
 ---
 
 ## Table of Contents
@@ -84,4 +83,5 @@ Breiman, L. (2001). Random Forests. *Machine Learning*, 45(1), 5-32. https://doi
 
 ---
 
-*Submitted for DS-ML Bootcamp — Assignment Five, Part C*
+*Submitted for DS-ML Bootcamp — Assignment Five*
+**Due:** Sunday, July 5, 2026*
