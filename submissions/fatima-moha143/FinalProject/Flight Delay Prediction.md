@@ -1,154 +1,197 @@
-# Final Project Proposal
+# 1. Certificate Name
 
-## Project Title
-
-**Flight Delay Prediction Using Machine Learning**
+[Fadumo Mohamed Omar]
 
 ---
 
-## 1. Background
+# 2. Project Title and Description
 
-Flight delays are one of the major challenges in the aviation industry. They affect airlines, airports, and passengers by increasing operational costs, causing missed connections, and reducing customer satisfaction. Machine Learning provides an opportunity to analyze historical flight data and predict whether a flight is likely to be delayed. Accurate predictions can help airlines improve scheduling, optimize resource allocation, and provide timely information to passengers.
+## Title: Flight Delay Prediction System
 
----
+Airlines operate thousands of flights every day, and flight delays create problems for passengers, airports, and airline companies. Delays can increase operational costs, reduce customer satisfaction, and affect flight schedules.
 
-## 2. Problem Statement
+This project builds a machine learning classification model that predicts whether a flight will be delayed based on historical flight information such as airline, departure time, destination airport, distance, and other flight-related factors.
 
-Flight delays occur due to several factors such as weather conditions, airport congestion, airline operations, departure time, and flight distance. It is difficult for airlines to accurately predict delays using traditional methods. Therefore, this project aims to develop a Machine Learning model that predicts whether a flight will be delayed based on historical flight information.
-
----
-
-## 3. Objectives
-
-### General Objective
-
-To develop a Machine Learning model that predicts flight delays using historical flight data.
-
-### Specific Objectives
-
-* Understand and explore the flight dataset.
-* Clean and preprocess the data.
-* Perform Exploratory Data Analysis (EDA).
-* Engineer meaningful features.
-* Train and compare multiple Machine Learning models.
-* Evaluate model performance using classification metrics.
-* Identify the most important factors contributing to flight delays.
+The final deliverable is a machine learning prediction system that receives flight details and returns a delay prediction with a probability score. This system can be useful for airline planning, passenger notification systems, and operational decision-making.
 
 ---
 
-## 4. Dataset
+# 3. Problem Type
 
-The project will use a publicly available flight delay dataset from Kaggle. The dataset contains flight information such as airline, departure airport, destination airport, departure time, arrival time, flight distance, weather conditions (if available), and delay status.
+**Classification — binary output: Delayed or On-Time.**
 
----
+The target column is **Delayed** (or a delay status column depending on the dataset).
 
-## 5. Methodology
+This is supervised learning because the model is trained using historical flight records where the final outcome (delay or no delay) is already known.
 
-The project will follow the CRISP-DM workflow:
+Output:
 
-1. Data Collection
-2. Data Understanding
-3. Data Cleaning
-4. Exploratory Data Analysis (EDA)
-5. Feature Engineering
-6. Data Preprocessing
-7. Train-Test Split
-8. Model Training
-9. Model Evaluation
-10. Model Comparison
-11. Interpretation of Results
+* 1 = Delayed
+* 0 = On-Time
 
 ---
 
-## 6. Machine Learning Models
+# 4. Dataset
 
-The following classification algorithms will be implemented and compared:
+**Source:** Flight Delay Dataset from Kaggle.
 
-* Logistic Regression
-* Decision Tree Classifier
-* Random Forest Classifier
+**Size:** Depends on the selected dataset (usually thousands to millions of flight records).
+
+**Target:**
+
+* Flight delay status (Delayed / Not Delayed)
+
+### Main Features:
+
+* Airline — airline company name (categorical)
+* Origin Airport — departure airport
+* Destination Airport — arrival airport
+* Scheduled Departure Time — planned departure time
+* Actual Departure Time — real departure time
+* Arrival Time — arrival information
+* Distance — flight distance (numeric)
+* Day of Week — travel day
+* Month — flight month
+* Weather conditions (if available)
+* Flight Duration — total flight time
+
+### Preprocessing Plan:
+
+* Handle missing values
+* Remove duplicate records
+* Convert date/time features
+* Extract useful features (hour, day, month)
+* Encode categorical variables
+* Scale numerical features
+* Stratified train/test split (80/20)
 
 ---
 
-## 7. Evaluation Metrics
+# 5. Algorithms I Plan to Train
 
-The models will be evaluated using:
+| # | Algorithm                    | Why it fits                                                                             |
+| - | ---------------------------- | --------------------------------------------------------------------------------------- |
+| 1 | Logistic Regression          | Strong baseline model for binary classification and easy interpretation.                |
+| 2 | Random Forest Classifier     | Handles complex relationships, reduces overfitting, and works well with mixed features. |
+| 3 | Gradient Boosting Classifier | Powerful ensemble algorithm that often performs well on structured datasets.            |
+
+This meets the requirement of training at least three machine learning algorithms.
+
+The first two models are based on classification methods learned during the bootcamp, while Gradient Boosting will be researched using scikit-learn documentation and tutorials.
+
+---
+
+# 6. Evaluation Plan
+
+All models will be evaluated using the same test dataset.
+
+Metrics:
 
 * Accuracy
 * Precision
 * Recall
 * F1-Score
-* ROC-AUC Score
 * Confusion Matrix
+* ROC-AUC Score
+
+### Best Model Selection:
+
+The final model will be selected based on the highest **F1-Score** because flight delay prediction requires balancing:
+
+* Correctly identifying delayed flights (Recall)
+* Avoiding unnecessary delay predictions (Precision)
+
+If two models have similar F1-Scores, ROC-AUC and Recall will be considered.
+
+The best model will be saved and used for deployment.
 
 ---
 
-## 8. Expected Outcomes
+# 7. Deployment Sketch
 
-The project is expected to produce a Machine Learning model capable of predicting flight delays with good accuracy. It will also identify the key factors influencing delays, providing useful insights for airlines to improve scheduling, reduce operational disruptions, and enhance passenger satisfaction.
+**Framework:** FastAPI
+
+FastAPI will be used to create a REST API that allows users to send flight information and receive delay predictions.
+
+## Endpoint:
+
+```
+POST /predict
+```
+
+### Input JSON Example:
+
+```json
+{
+  "Airline": "Delta",
+  "Origin": "JFK",
+  "Destination": "LAX",
+  "Distance": 2475,
+  "Departure_Hour": 14,
+  "Day_of_Week": 5,
+  "Month": 7
+}
+```
+
+### Output JSON Example:
+
+```json
+{
+  "prediction": "Delayed",
+  "probability": 0.82
+}
+```
+
+The API will load the saved best model from:
+
+```
+models/best_model.pkl
+```
+
+along with preprocessing files such as encoders and scalers.
 
 ---
 
-## 9. Tools and Technologies
+# 8. Repository Plan
 
-* Python
-* Jupyter Notebook
-* Pandas
-* NumPy
-* Matplotlib
-* Scikit-learn
-* Git & GitHub
-
----
-
-## 10. Repository Plan
-
-```text
+```
 flight-delay-prediction/
 │
-├── data/
-│   ├── raw/
-│   │   └── flights.csv
-│   └── processed/
-│       └── cleaned_flights.csv
+├── dataset/
+│   ├── raw_flights.csv
+│   └── cleaned_flights.csv
+│
+├── src/
+│   ├── preprocess.py
+│   └── train.py
+│
+├── api/
+│   └── app.py
+│
+├── models/
+│   ├── best_model.pkl
+│   ├── scaler.pkl
+│   └── encoder.pkl
 │
 ├── notebooks/
-│   └── Flight_Delay_Prediction.ipynb
+│   └── exploration.ipynb
 │
 ├── images/
 │   ├── delay_distribution.png
-│   ├── feature_importance.png
-│   └── confusion_matrix.png
+│   ├── confusion_matrix.png
+│   └── feature_importance.png
 │
-├── models/
-│   └── best_model.pkl
-│
-├── src/
-│   ├── data_preprocessing.py
-│   ├── feature_engineering.py
-│   ├── train_model.py
-│   └── evaluate_model.py
-│
-├── requirements.txt
 ├── README.md
-├── LICENSE
-└── .gitignore
+├── requirements.txt
+└── project_paper.md
 ```
-
-### Repository Description
-
-* **data/** – Stores the raw and processed datasets.
-* **notebooks/** – Contains the Jupyter Notebook used for data analysis and model development.
-* **images/** – Stores charts, graphs, and evaluation visualizations.
-* **models/** – Stores the trained Machine Learning model.
-* **src/** – Contains reusable Python scripts for preprocessing, feature engineering, training, and evaluation.
-* **requirements.txt** – Lists all required Python libraries.
-* **README.md** – Explains the project, setup instructions, methodology, and results.
-* **LICENSE** – Specifies the project license.
-* **.gitignore** – Excludes unnecessary files from version control.
 
 ---
 
-## 11. Conclusion
+# 9. Expected Outcome
 
-This project demonstrates how Machine Learning can be applied to solve a real-world aviation problem by predicting flight delays. Through data preprocessing, exploratory analysis, model training, and evaluation, the project aims to build an accurate prediction system while providing actionable insights that can help airlines improve operational efficiency and customer satisfaction.
+The project will produce a machine learning model capable of predicting flight delays from historical flight information.
+
+The system will help demonstrate how machine learning can solve real-world aviation problems by improving decision-making, reducing operational problems, and providing better passenger services.
+
+---
