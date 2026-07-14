@@ -12,35 +12,35 @@
 
 ## 2. Project Title and Description
 
-**Title:** Customer Churn Prediction API
+**Title:** Crop Recommendation API
 
-Subscription and service businesses lose money every time a paying customer walks away, and by the time someone notices, it's usually too late to do anything about it. This project builds a model that looks at a customer's account details, things like how long they've been signed up, what they pay, and what services they use, then flags who is likely to leave next. A customer support or retention team could use this to reach out to at-risk customers before they cancel, instead of finding out after the fact.
+Farmers often decide what to plant based on habit or guesswork, even though soil nutrients and local weather conditions play a big role in whether a crop will actually thrive. This matters a lot in an economy like Ethiopia's, where agriculture is a major source of income and food security depends on getting these decisions right. This project builds a model that takes a few measurable inputs, soil nitrogen, phosphorus, and potassium levels, along with temperature, humidity, rainfall, and pH, and recommends the crop best suited to those conditions. An extension officer, a cooperative, or even a farmer with a soil test kit could use this to make a more informed planting decision instead of relying on guesswork.
 
 ---
 
 ## 3. Problem Type
 
-**Classification**: the target is binary, `Churn = Yes` or `Churn = No`.
+**Classification**: this is a multi-class problem. Given a set of soil and climate readings, the model picks one crop out of 22 possible options as its recommendation.
 
-This is supervised learning. The dataset already has historical records of who left and who stayed, so the model learns from those labeled examples.
+This is supervised learning. Each row in the dataset already has a known best-fit crop label, so the model learns the relationship between conditions and crop from those examples.
 
 ---
 
 ## 4. Dataset
 
-- **Source:** [Telco Customer Churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn) (Kaggle).
-- **Size:** The full dataset has 7,043 rows. I'll work with a random sample of about **2,000 rows** to keep training and iteration fast, which is still well above the 1,000-row minimum.
-- **Target column:** `Churn`, whether the customer left in the last month (`Yes`/`No`).
+- **Source:** [Crop Recommendation Dataset](https://www.kaggle.com/datasets/atharvaingle/crop-recommendation-dataset) (Kaggle).
+- **Size:** 2,200 rows, 8 columns. The dataset is clean, with no missing values, and evenly balanced across all 22 crop classes (100 rows per crop).
+- **Target column:** `label`, the recommended crop. There are 22 possible values, including rice, maize, chickpea, coffee, cotton, banana, mango, and others.
 - **Main features:**
-  - `tenure`: how many months the customer has stayed
-  - `MonthlyCharges` and `TotalCharges`: billing amounts
-  - `Contract`: month-to-month, one year, or two year
-  - `InternetService`: DSL, fiber optic, or none
-  - `PaymentMethod`: how the customer pays
-  - `OnlineSecurity`, `TechSupport`, `StreamingTV` and similar service add-ons: whether the customer subscribes to each
-  - `gender`, `SeniorCitizen`, `Partner`, `Dependents`: basic demographic fields
+  - `N`: nitrogen content in the soil
+  - `P`: phosphorus content in the soil
+  - `K`: potassium content in the soil
+  - `temperature`: average temperature in degrees Celsius
+  - `humidity`: relative humidity as a percentage
+  - `ph`: soil pH level
+  - `rainfall`: rainfall in millimeters
 
-**Preprocessing plan:** drop or impute missing values (a small number of blank `TotalCharges` rows are common in this dataset), encode categorical columns, scale numeric features, and split into an 80/20 train/test set, stratified on `Churn` so both sets keep a similar churn rate.
+**Preprocessing plan:** since the dataset has no missing values, preprocessing mainly means scaling the numeric features (all seven are numeric), encoding the `label` column for models that need numeric targets, and splitting into an 80/20 train/test set, stratified on `label` so every crop is represented proportionally in both sets.
 
 ---
 
@@ -48,11 +48,11 @@ This is supervised learning. The dataset already has historical records of who l
 
 | # | Algorithm | Why it fits |
 | --- | --- | --- |
-| 1 | **Logistic Regression** | Bootcamp baseline for binary classification. Coefficients are easy to explain to a non-technical stakeholder, like which factors push churn up or down. |
-| 2 | **Random Forest** | Bootcamp ensemble method. Handles the mix of numeric and categorical features here without much tuning, and won't overfit as easily as a single tree. |
-| 3 | **Gradient Boosting (scikit-learn)** | I'll research this one on my own. It tends to perform well on tabular data like this and is a reasonable candidate for the best-performing model. |
+| 1 | **Logistic Regression (multinomial)** | Bootcamp baseline extended to multi-class. Gives a simple, interpretable starting point before trying more complex models. |
+| 2 | **Random Forest** | Bootcamp ensemble method. Naturally handles multi-class problems and tends to perform well on this kind of dataset without much tuning. |
+| 3 | **K-Nearest Neighbors (KNN)** | I'll research this one on my own. Since the classes are well separated by soil and climate values, a distance-based method like KNN is a reasonable candidate for strong performance here. |
 
-That covers the minimum of three. Two come from the bootcamp lessons, and Gradient Boosting is the one I'll dig into through the scikit-learn docs and a tutorial or two. I may add a Decision Tree or SVM as a fourth if time allows.
+That covers the minimum of three. Two come from the bootcamp lessons, and KNN is the one I'll dig into through the scikit-learn documentation. I may add Support Vector Machine or Gradient Boosting as a fourth if time allows.
 
 ---
 
@@ -61,12 +61,12 @@ That covers the minimum of three. Two come from the bootcamp lessons, and Gradie
 **Metrics for all three models, measured on the same held-out test set:**
 
 - Accuracy
-- Precision
-- Recall
-- F1-Score
+- Precision (weighted average across all 22 classes)
+- Recall (weighted average across all 22 classes)
+- F1-Score (weighted average across all 22 classes)
 - Confusion Matrix
 
-**Best-model rule:** I'll rank the models by **F1-Score**. Churn datasets are usually imbalanced, since far more people stay than leave, so accuracy alone can be misleading. F1 balances precision and recall, which matters here because missing an actual churner (low recall) and wrongly flagging a happy customer (low precision) are both costly in different ways. If two models land close on F1, I'll use Recall as the tiebreaker, since catching more real churners is the more useful outcome for a retention team.
+**Best-model rule:** I'll rank the models by **weighted F1-Score**. With 22 classes, a single wrong prediction can hurt one crop's precision or recall much more than another's, so a weighted average keeps the comparison fair across classes of equal size. Since the dataset is balanced, accuracy should track closely with F1 here, but F1 remains the primary rule in case any model performs unevenly across specific crops.
 
 ---
 
@@ -78,17 +78,13 @@ That covers the minimum of three. Two come from the bootcamp lessons, and Gradie
 
 ```json
 {
-  "tenure": 12,
-  "MonthlyCharges": 70.35,
-  "TotalCharges": 845.50,
-  "Contract": "Month-to-month",
-  "InternetService": "Fiber optic",
-  "OnlineSecurity": "No",
-  "TechSupport": "No",
-  "PaymentMethod": "Electronic check",
-  "SeniorCitizen": 0,
-  "Partner": "No",
-  "Dependents": "No"
+  "N": 90,
+  "P": 42,
+  "K": 43,
+  "temperature": 20.87,
+  "humidity": 82.0,
+  "ph": 6.5,
+  "rainfall": 202.9
 }
 ```
 
@@ -96,29 +92,30 @@ That covers the minimum of three. Two come from the bootcamp lessons, and Gradie
 
 ```json
 {
-  "prediction": "Churn",
-  "probability": 0.78
+  "prediction": "rice",
+  "probability": 0.94
 }
 ```
 
-The API loads the winning model from `models/best_model.pkl`, along with the fitted scaler and encoders, so incoming JSON gets preprocessed the same way the training data was.
+The API loads the winning model from `models/best_model.pkl`, along with the fitted scaler and label encoder, so incoming JSON gets preprocessed the same way the training data was, and the numeric prediction gets mapped back to a crop name before the response is sent.
 
 ---
 
 ## 8. Repository Plan
 
 ```
-customer-churn-api/
+crop-recommendation-api/
 ├── dataset/
-│   └── telco_churn_sample.csv
+│   └── crop_recommendation.csv
 ├── src/
-│   ├── preprocess.py      # cleaning, encoding, scaling, train/test split
+│   ├── preprocess.py      # scaling, label encoding, train/test split
 │   └── train.py           # trains all three models, prints comparison table, saves best
 ├── api/
 │   └── app.py              # FastAPI app with /predict
 ├── models/
 │   ├── best_model.pkl
-│   └── scaler.pkl
+│   ├── scaler.pkl
+│   └── label_encoder.pkl
 ├── README.md
 ├── requirements.txt
 └── project_paper.md
